@@ -179,6 +179,8 @@ class DBImpl : public DB {
 
   virtual SequenceNumber GetLatestSequenceNumber() const override;
 
+  bool HasActiveSnapshotLaterThanSN(SequenceNumber sn);
+
 #ifndef ROCKSDB_LITE
   virtual Status DisableFileDeletions() override;
   virtual Status EnableFileDeletions(bool force) override;
@@ -522,6 +524,7 @@ class DBImpl : public DB {
   Statistics* stats_;
   std::unordered_map<std::string, RecoveredTransaction*>
       recovered_transactions_;
+
 
   InternalIterator* NewInternalIterator(const ReadOptions&,
                                         ColumnFamilyData* cfd,
@@ -1035,13 +1038,6 @@ class DBImpl : public DB {
   // No copying allowed
   DBImpl(const DBImpl&);
   void operator=(const DBImpl&);
-
-  // Return the earliest snapshot where seqno is visible.
-  // Store the snapshot right before that, if any, in prev_snapshot
-  inline SequenceNumber findEarliestVisibleSnapshot(
-    SequenceNumber in,
-    std::vector<SequenceNumber>& snapshots,
-    SequenceNumber* prev_snapshot);
 
   // Background threads call this function, which is just a wrapper around
   // the InstallSuperVersion() function. Background threads carry
